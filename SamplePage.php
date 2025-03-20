@@ -1,213 +1,219 @@
 <?php include "../inc/dbinfo.inc"; ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciamento de Funcionários</title>
+  <title>Employee Management</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      color: #333;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 20px;
     }
     h1 {
-      color: #4CAF50;
+      color: #333;
       text-align: center;
     }
     form {
-      background-color: #ffffff;
+      background-color: #fff;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       max-width: 600px;
-      margin: 20px auto;
+      margin: 0 auto;
     }
-    .form-group {
-      margin-bottom: 15px;
+    table.form-table {
+      width: 100%;
+      border-collapse: collapse;
     }
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #555;
+    table.form-table td {
+      padding: 10px;
     }
-    .form-group input[type="text"], 
-    .form-group input[type="date"] {
+    table.form-table input[type="text"],
+    table.form-table input[type="number"],
+    table.form-table input[type="date"] {
       width: 100%;
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
+      box-sizing: border-box;
     }
-    .form-row {
-      display: flex;
-      gap: 10px;
-    }
-    .form-row .form-group {
-      flex: 1;
-    }
-    input[type="submit"] {
-      background-color: #4CAF50;
+    table.form-table input[type="submit"] {
+      background-color: #28a745;
       color: white;
-      padding: 10px 20px;
       border: none;
+      padding: 10px 20px;
       border-radius: 4px;
       cursor: pointer;
-      width: 100%;
-      font-size: 16px;
     }
-    input[type="submit"]:hover {
-      background-color: #45a049;
+    table.form-table input[type="submit"]:hover {
+      background-color: #218838;
     }
-    table {
+    table.data-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
+      margin-top: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th, td {
+    table.data-table th,
+    table.data-table td {
       padding: 12px;
       text-align: left;
+      border-bottom: 1px solid #ddd;
     }
-    th {
-      background-color: #4CAF50;
+    table.data-table th {
+      background-color: #007bff;
       color: white;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
+    table.data-table tr:hover {
       background-color: #f1f1f1;
     }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Gerenciamento de Funcionários</h1>
+<h1>Employee Management</h1>
 
-    <!-- Input form -->
-    <form action="<?PHP echo $_SERVER['SCRIPT_NAME'] ?>" method="POST">
-      <!-- Primeira linha: Nome, Endereço, Comida Favorita -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="NAME">Nome</label>
-          <input type="text" id="NAME" name="NAME" maxlength="45" placeholder="Nome" required />
-        </div>
-        <div class="form-group">
-          <label for="ADDRESS">Endereço</label>
-          <input type="text" id="ADDRESS" name="ADDRESS" maxlength="90" placeholder="Endereço" required />
-        </div>
-        <div class="form-group">
-          <label for="comida_favorita">Comida Favorita</label>
-          <input type="text" id="comida_favorita" name="comida_favorita" maxlength="100" placeholder="Comida Favorita" />
-        </div>
-      </div>
+<?php
 
-      <!-- Segunda linha: Bebida Favorita, Cor Favorita, Data de Aniversário -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="bebida_favorita">Bebida Favorita</label>
-          <input type="text" id="bebida_favorita" name="bebida_favorita" maxlength="100" placeholder="Bebida Favorita" />
-        </div>
-        <div class="form-group">
-          <label for="cor_favorita">Cor Favorita</label>
-          <input type="text" id="cor_favorita" name="cor_favorita" maxlength="50" placeholder="Cor Favorita" />
-        </div>
-        <div class="form-group">
-          <label for="data_aniversario">Data de Aniversário</label>
-          <input type="date" id="data_aniversario" name="data_aniversario" />
-        </div>
-      </div>
+  /* Connect to MySQL and select the database. */
+  $connection = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 
-      <!-- Botão de envio -->
-      <input type="submit" value="Adicionar Funcionário" />
-    </form>
+  if (mysqli_connect_errno()) {
+    echo "<p class='error'>Failed to connect to MySQL: " . mysqli_connect_error() . "</p>";
+    exit();
+  }
 
-    <?php
-      /* Connect to MySQL and select the database. */
-      $connection = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
+  $database = mysqli_select_db($connection, DB_DATABASE);
 
-      if (mysqli_connect_errno()) echo "Falha ao conectar ao MySQL: " . mysqli_connect_error();
+  if (!$database) {
+    echo "<p class='error'>Failed to select database: " . mysqli_error($connection) . "</p>";
+    exit();
+  }
 
-      $database = mysqli_select_db($connection, DB_DATABASE);
+  /* Ensure that the EMPLOYEES table exists. */
+  VerifyEmployeesTable($connection, DB_DATABASE);
 
-      /* Ensure that the EMPLOYEES table exists. */
-      VerifyEmployeesTable($connection, DB_DATABASE);
+  /* If input fields are populated, add a row to the EMPLOYEES table. */
+  $employee_name = htmlentities($_POST['NAME'] ?? '');
+  $employee_address = htmlentities($_POST['ADDRESS'] ?? '');
+  $employee_age = intval($_POST['IDADE'] ?? 0); // Idade como integer
+  $employee_favorite_color = htmlentities($_POST['COR_FAVORITA'] ?? ''); // Cor favorita como string
+  $employee_height = floatval($_POST['ALTURA'] ?? 0.0); // Altura como numeric
+  $employee_birthdate = htmlentities($_POST['DATA_ANIVERSARIO'] ?? ''); // Data de aniversário como date
 
-      /* If input fields are populated, add a row to the EMPLOYEES table. */
-      $employee_name = htmlentities($_POST['NAME']);
-      $employee_address = htmlentities($_POST['ADDRESS']);
-      $comida_favorita = htmlentities($_POST['comida_favorita']);
-      $bebida_favorita = htmlentities($_POST['bebida_favorita']);
-      $cor_favorita = htmlentities($_POST['cor_favorita']);
-      $data_aniversario = htmlentities($_POST['data_aniversario']);
+  if (!empty($employee_name) || !empty($employee_address) || !empty($employee_age) || !empty($employee_favorite_color) || !empty($employee_height) || !empty($employee_birthdate)) {
+    AddEmployee($connection, $employee_name, $employee_address, $employee_age, $employee_favorite_color, $employee_height, $employee_birthdate);
+  }
+?>
 
-      if (strlen($employee_name) || strlen($employee_address) || strlen($comida_favorita) || strlen($bebida_favorita) || strlen($cor_favorita) || strlen($data_aniversario)) {
-        AddEmployee($connection, $employee_name, $employee_address, $comida_favorita, $bebida_favorita, $cor_favorita, $data_aniversario);
-      }
-    ?>
+<!-- Input form -->
+<form action="<?php echo $_SERVER['SCRIPT_NAME']; ?>" method="POST">
+  <table class="form-table">
+    <tr>
+      <td>NAME</td>
+      <td>ADDRESS</td>
+      <td>IDADE</td>
+      <td>COR FAVORITA</td>
+      <td>ALTURA</td>
+      <td>DATA DE ANIVERSÁRIO</td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="NAME" maxlength="45" size="30" />
+      </td>
+      <td>
+        <input type="text" name="ADDRESS" maxlength="90" size="60" />
+      </td>
+      <td>
+        <input type="number" name="IDADE" maxlength="3" size="5" />
+      </td>
+      <td>
+        <input type="text" name="COR_FAVORITA" maxlength="50" size="20" />
+      </td>
+      <td>
+        <input type="number" step="0.01" name="ALTURA" />
+      </td>
+      <td>
+        <input type="date" name="DATA_ANIVERSARIO" />
+      </td>
+      <td>
+        <input type="submit" value="Add Data" />
+      </td>
+    </tr>
+  </table>
+</form>
 
-    <!-- Display table data. -->
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Endereço</th>
-        <th>Comida Favorita</th>
-        <th>Bebida Favorita</th>
-        <th>Cor Favorita</th>
-        <th>Data de Aniversário</th>
-      </tr>
+<!-- Display table data. -->
+<table class="data-table">
+  <tr>
+    <th>ID</th>
+    <th>NAME</th>
+    <th>ADDRESS</th>
+    <th>IDADE</th>
+    <th>COR FAVORITA</th>
+    <th>ALTURA</th>
+    <th>DATA DE ANIVERSÁRIO</th>
+  </tr>
 
-      <?php
-      $result = mysqli_query($connection, "SELECT * FROM EMPLOYEES");
+<?php
 
-      while($query_data = mysqli_fetch_row($result)) {
-        echo "<tr>";
-        echo "<td>",$query_data[0], "</td>",
-             "<td>",$query_data[1], "</td>",
-             "<td>",$query_data[2], "</td>",
-             "<td>",$query_data[3], "</td>",
-             "<td>",$query_data[4], "</td>",
-             "<td>",$query_data[5], "</td>",
-             "<td>",$query_data[6], "</td>";
-        echo "</tr>";
-      }
-      ?>
-    </table>
+$result = mysqli_query($connection, "SELECT * FROM EMPLOYEES");
 
-    <!-- Clean up. -->
-    <?php
-      mysqli_free_result($result);
-      mysqli_close($connection);
-    ?>
-  </div>
+if ($result) {
+  while($query_data = mysqli_fetch_row($result)) {
+    echo "<tr>";
+    echo "<td>", $query_data[0], "</td>",
+         "<td>", $query_data[1], "</td>",
+         "<td>", $query_data[2], "</td>",
+         "<td>", $query_data[3], "</td>",
+         "<td>", $query_data[4], "</td>",
+         "<td>", $query_data[5], "</td>",
+         "<td>", $query_data[6], "</td>";
+    echo "</tr>";
+  }
+} else {
+  echo "<tr><td colspan='7' class='error'>Error fetching data: " . mysqli_error($connection) . "</td></tr>";
+}
+?>
+
+</table>
+
+<!-- Clean up. -->
+<?php
+
+  if (isset($result)) {
+    mysqli_free_result($result);
+  }
+  mysqli_close($connection);
+
+?>
+
 </body>
 </html>
+
 
 <?php
 
 /* Add an employee to the table. */
-function AddEmployee($connection, $name, $address, $comida_favorita, $bebida_favorita, $cor_favorita, $data_aniversario) {
+function AddEmployee($connection, $name, $address, $age, $favorite_color, $height, $birthdate) {
    $n = mysqli_real_escape_string($connection, $name);
    $a = mysqli_real_escape_string($connection, $address);
-   $cf = mysqli_real_escape_string($connection, $comida_favorita);
-   $bf = mysqli_real_escape_string($connection, $bebida_favorita);
-   $cor = mysqli_real_escape_string($connection, $cor_favorita);
-   $da = mysqli_real_escape_string($connection, $data_aniversario);
+   $ag = intval($age); // Garantir que a idade seja um inteiro
+   $fc = mysqli_real_escape_string($connection, $favorite_color);
+   $h = floatval($height); // Garantir que a altura seja numérica
+   $bd = mysqli_real_escape_string($connection, $birthdate);
 
-   $query = "INSERT INTO EMPLOYEES (NAME, ADDRESS, comida_favorita, bebida_favorita, cor_favorita, data_aniversario) 
-             VALUES ('$n', '$a', '$cf', '$bf', '$cor', '$da');";
+   $query = "INSERT INTO EMPLOYEES (NAME, ADDRESS, IDADE, COR_FAVORITA, ALTURA, DATA_ANIVERSARIO) VALUES ('$n', '$a', $ag, '$fc', $h, '$bd');";
 
-   if(!mysqli_query($connection, $query)) echo("<p>Erro ao adicionar dados do funcionário.</p>");
+   if(!mysqli_query($connection, $query)) {
+     echo "<p class='error'>Error adding employee data: " . mysqli_error($connection) . "</p>";
+   }
 }
 
 /* Check whether the table exists and, if not, create it. */
@@ -218,13 +224,15 @@ function VerifyEmployeesTable($connection, $dbName) {
          ID int(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
          NAME VARCHAR(45),
          ADDRESS VARCHAR(90),
-         comida_favorita VARCHAR(100),
-         bebida_favorita VARCHAR(100),
-         cor_favorita VARCHAR(50),
-         data_aniversario DATE
+         IDADE INT,
+         COR_FAVORITA VARCHAR(50),
+         ALTURA DECIMAL(5,2),
+         DATA_ANIVERSARIO DATE
        )";
 
-     if(!mysqli_query($connection, $query)) echo("<p>Erro ao criar a tabela.</p>");
+     if(!mysqli_query($connection, $query)) {
+       echo "<p class='error'>Error creating table: " . mysqli_error($connection) . "</p>";
+     }
   }
 }
 
@@ -236,7 +244,7 @@ function TableExists($tableName, $connection, $dbName) {
   $checktable = mysqli_query($connection,
       "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME = '$t' AND TABLE_SCHEMA = '$d'");
 
-  if(mysqli_num_rows($checktable) > 0) return true;
+  if($checktable && mysqli_num_rows($checktable) > 0) return true;
 
   return false;
 }
